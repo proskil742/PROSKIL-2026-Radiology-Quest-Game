@@ -1,0 +1,1867 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radiology Quest: X-Ray Vision & Machine Master | Misi Radiologi</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- html2canvas for PNG Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Google Fonts: Rajdhani, Orbitron, Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@600;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            radiology: {
+              bg: '#070a12',
+              panel: '#0f172a',
+              card: '#1e293b',
+              accent: '#06b6d4',
+              glow: '#22d3ee',
+              teal: '#14b8a6',
+              gold: '#f59e0b'
+            }
+          },
+          fontFamily: {
+            orbitron: ['Orbitron', 'sans-serif'],
+            rajdhani: ['Rajdhani', 'sans-serif'],
+            sans: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #070a12;
+      color: #f1f5f9;
+      font-family: 'Inter', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow-x: hidden;
+    }
+
+    .font-tech { font-family: 'Rajdhani', sans-serif; }
+    .font-cyber { font-family: 'Orbitron', sans-serif; }
+
+    /* Animated Medical Laser Scanning Line */
+    .scan-line {
+      position: absolute;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #22d3ee, #14b8a6, transparent);
+      box-shadow: 0 0 15px #22d3ee;
+      animation: scanMove 3s ease-in-out infinite alternate;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    @keyframes scanMove {
+      0% { top: 2%; opacity: 0.3; }
+      50% { opacity: 1; }
+      100% { top: 96%; opacity: 0.3; }
+    }
+
+    /* Glowing Workstation Borders & Shadows */
+    .glow-cyan {
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+    }
+
+    .glow-border {
+      border: 1px solid rgba(34, 211, 238, 0.3);
+      box-shadow: inset 0 0 15px rgba(6, 182, 212, 0.12);
+    }
+
+    .grid-pattern {
+      background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    /* Pulse animation for sound indicator */
+    @keyframes audioPulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.1); opacity: 1; }
+    }
+    .audio-active {
+      animation: audioPulse 1.5s infinite ease-in-out;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #070a12; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
+
+    /* Print Badge Optimization */
+    @media print {
+      body * { visibility: hidden; }
+      #certificateCard, #certificateCard * { visibility: visible; }
+      #certificateCard {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+        background: #0f172a !important;
+        color: #ffffff !important;
+        border: 4px solid #f59e0b !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between grid-pattern relative selection:bg-cyan-500 selection:text-black">
+
+  <!-- Background Particle Effect Canvas -->
+  <canvas id="bgParticleCanvas" class="fixed inset-0 pointer-events-none z-0 opacity-40"></canvas>
+
+  <!-- Top Navigation Workstation Header -->
+  <header id="mainHeader" class="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-md border-b border-cyan-500/20 px-3 sm:px-6 py-3 shadow-xl">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      
+      <!-- Brand & Booth Title -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('menu')">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 border border-cyan-300/40">
+          <i class="fa-solid fa-bone text-slate-950 text-xl rotate-45"></i>
+        </div>
+        <div>
+          <h1 class="font-cyber text-base sm:text-xl font-bold tracking-wider text-cyan-300 leading-tight">RADIOLOGY QUEST</h1>
+          <p class="text-[10px] sm:text-xs text-cyan-400/80 font-medium tracking-wide font-tech" id="appSubHeading">X-RAY VISION & MACHINE MASTER</p>
+        </div>
+      </div>
+
+      <!-- Action Controls: Language Toggle, Audio, BGM, Score -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        
+        <!-- Dual Language Switcher Toggle Switch -->
+        <div class="bg-slate-900 border border-cyan-500/30 rounded-xl p-1 flex items-center gap-1 shadow-inner">
+          <button id="langENBtn" onclick="setLanguage('en')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition duration-200 bg-cyan-500 text-slate-950">
+            EN
+          </button>
+          <button id="langMSBtn" onclick="setLanguage('ms')" class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition duration-200">
+            BM
+          </button>
+        </div>
+
+        <!-- Cyber Music / Sound Mode Control Button -->
+        <button id="soundToggleBtn" onclick="toggleAudio()" title="Toggle Cyber Music & SFX" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-cyan-500/40 text-cyan-300 flex items-center gap-2 text-xs font-bold transition hover:bg-slate-800 shadow-md">
+          <i class="fa-solid fa-compact-disc audio-active" id="bgmIcon"></i>
+          <span id="bgmLabel" class="hidden md:inline">MUSIC ON</span>
+        </button>
+
+        <!-- Score Counter HUD -->
+        <div class="bg-slate-900 border border-cyan-500/30 rounded-xl px-3 py-1 flex items-center gap-2 font-tech">
+          <i class="fa-solid fa-star text-amber-400 text-xs sm:text-sm"></i>
+          <span class="text-[10px] sm:text-xs text-slate-400 uppercase hidden sm:inline" id="scoreLabel">SCORE</span>
+          <span id="totalScoreDisplay" class="text-base sm:text-lg font-bold text-cyan-300">0</span>
+        </div>
+
+      </div>
+
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-6 z-10 flex flex-col justify-center">
+
+    <!-- ================= VIEW 0: MAIN HUB MENU ================= -->
+    <section id="menuView" class="space-y-8 max-w-5xl mx-auto w-full">
+      
+      <!-- Hero Banner Card -->
+      <div class="bg-gradient-to-r from-slate-900 via-slate-900/90 to-cyan-950/40 p-6 md:p-8 rounded-3xl border border-cyan-500/30 glow-border relative overflow-hidden shadow-2xl">
+        <div class="absolute -right-10 -bottom-10 opacity-10 text-cyan-400 pointer-events-none">
+          <i class="fa-solid fa-x-ray text-[220px]"></i>
+        </div>
+        <div class="relative z-10 max-w-2xl space-y-3">
+          <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-400/30" id="heroTag">
+            PROSKIL 2026 Mega Programme & Radiology Department HSAAS Booth
+          </span>
+          <h2 class="font-cyber text-2xl sm:text-4xl font-extrabold text-slate-100 leading-tight" id="heroTitle">
+            Discover the Power of <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300">Medical Imaging!</span>
+          </h2>
+          <p class="text-slate-300 text-xs sm:text-base leading-relaxed" id="heroDesc">
+            Learn how Diagnostic Radiographers use invisible rays, magnetic fields, and sound waves to safely see inside the human body and save lives every day!
+          </p>
+        </div>
+      </div>
+
+      <!-- Mode Selector Grid (4 Interactive Game Modes) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        
+        <!-- Mode 1: Interactive X-Ray Lens -->
+        <div onclick="startMode(1)" class="group bg-slate-900/90 hover:bg-slate-900 border border-cyan-500/30 hover:border-cyan-400 p-5 rounded-2xl cursor-pointer transition-all duration-300 transform hover:-translate-y-1.5 shadow-xl flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-20 h-20 bg-cyan-500/10 rounded-bl-full group-hover:bg-cyan-500/20 transition-all"></div>
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300 text-xl mb-3 group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-eye"></i>
+            </div>
+            <h3 class="font-tech text-lg font-bold text-cyan-200 group-hover:text-cyan-300" id="mode1CardTitle">1. X-Ray Vision Scanner</h3>
+            <p class="text-xs text-slate-400 mt-2 leading-relaxed" id="mode1CardDesc">
+              Drag the lens to scan body layers! Discover hidden bone fractures, foreign swallowed objects, and implants.
+            </p>
+          </div>
+          <div class="mt-5 flex items-center justify-between text-xs font-semibold text-cyan-400 pt-3 border-t border-slate-800">
+            <span id="playLabel1">Play Mode</span>
+            <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        </div>
+
+        <!-- Mode 2: Machine Matcher -->
+        <div onclick="startMode(2)" class="group bg-slate-900/90 hover:bg-slate-900 border border-blue-500/30 hover:border-blue-400 p-5 rounded-2xl cursor-pointer transition-all duration-300 transform hover:-translate-y-1.5 shadow-xl flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-bl-full group-hover:bg-blue-500/20 transition-all"></div>
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-blue-300 text-xl mb-3 group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-hospital-user"></i>
+            </div>
+            <h3 class="font-tech text-lg font-bold text-blue-200 group-hover:text-blue-300" id="mode2CardTitle">2. Machine Matcher</h3>
+            <p class="text-xs text-slate-400 mt-2 leading-relaxed" id="mode2CardDesc">
+              Match medical cases with X-Ray, CT Scan, MRI, Ultrasound, or Mammography machines.
+            </p>
+          </div>
+          <div class="mt-5 flex items-center justify-between text-xs font-semibold text-blue-400 pt-3 border-t border-slate-800">
+            <span id="playLabel2">Play Mode</span>
+            <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        </div>
+
+        <!-- Mode 3: MythBusters Quiz -->
+        <div onclick="startMode(3)" class="group bg-slate-900/90 hover:bg-slate-900 border border-teal-500/30 hover:border-teal-400 p-5 rounded-2xl cursor-pointer transition-all duration-300 transform hover:-translate-y-1.5 shadow-xl flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-20 h-20 bg-teal-500/10 rounded-bl-full group-hover:bg-teal-500/20 transition-all"></div>
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-teal-500/20 border border-teal-400/40 flex items-center justify-center text-teal-300 text-xl mb-3 group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-burst"></i>
+            </div>
+            <h3 class="font-tech text-lg font-bold text-teal-200 group-hover:text-teal-300" id="mode3CardTitle">3. Radiology MythBusters</h3>
+            <p class="text-xs text-slate-400 mt-2 leading-relaxed" id="mode3CardDesc">
+              Do X-Rays make you glow? Can you wear metal in MRI? Test your knowledge in this fast-paced myth quiz!
+            </p>
+          </div>
+          <div class="mt-5 flex items-center justify-between text-xs font-semibold text-teal-400 pt-3 border-t border-slate-800">
+            <span id="playLabel3">Play Mode</span>
+            <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        </div>
+
+        <!-- Mode 4: Certificate & Badge Generator -->
+        <div onclick="startMode(4)" class="group bg-slate-900/90 hover:bg-slate-900 border border-amber-500/30 hover:border-amber-400 p-5 rounded-2xl cursor-pointer transition-all duration-300 transform hover:-translate-y-1.5 shadow-xl flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-20 h-20 bg-amber-500/10 rounded-bl-full group-hover:bg-amber-500/20 transition-all"></div>
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 text-xl mb-3 group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-award"></i>
+            </div>
+            <h3 class="font-tech text-lg font-bold text-amber-200 group-hover:text-amber-300" id="mode4CardTitle">4. Junior Diagnostic Radiographer Badge</h3>
+            <p class="text-xs text-slate-400 mt-2 leading-relaxed" id="mode4CardDesc">
+              Earn your official Junior Diagnostic Radiographer badge certificate with your custom name and score summary!
+            </p>
+          </div>
+          <div class="mt-5 flex items-center justify-between text-xs font-semibold text-amber-400 pt-3 border-t border-slate-800">
+            <span id="playLabel4">View Badge</span>
+            <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Diagnostic Radiographer Public Awareness Info Banner -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-teal-500/20 border border-teal-400/40 flex items-center justify-center text-teal-300 shrink-0">
+            <i class="fa-solid fa-user-nurse text-lg"></i>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-slate-200" id="infoBannerTitle">Meet Your Healthcare Hero: The Diagnostic Radiographer</h4>
+            <p class="text-xs text-slate-400" id="infoBannerDesc">Diagnostic Radiographers apply physics, radiation safety (ALARA), and compassion to produce clear diagnostic images.</p>
+          </div>
+        </div>
+        <button onclick="openRadiographerModal()" class="w-full md:w-auto px-4 py-2 rounded-xl bg-teal-500/20 hover:bg-teal-500/30 border border-teal-400/40 text-teal-300 font-bold text-xs flex items-center justify-center gap-2 transition shrink-0" id="learnMoreBtn">
+          <i class="fa-solid fa-circle-info"></i> Learn About Diagnostic Radiographers
+        </button>
+      </div>
+
+    </section>
+
+    <!-- ================= VIEW 1: INTERACTIVE X-RAY SCANNER ================= -->
+    <section id="mode1View" class="hidden space-y-6 max-w-4xl mx-auto w-full">
+      
+      <!-- Top HUD Control Bar -->
+      <div class="flex items-center justify-between bg-slate-900/90 border border-cyan-500/30 p-3 sm:p-4 rounded-2xl">
+        <button onclick="switchView('menu')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left"></i> <span id="backBtn1">Menu</span>
+        </button>
+        <div class="text-center">
+          <span id="m1Progress" class="text-[11px] font-bold text-cyan-400 uppercase tracking-wider">Case 1 of 4</span>
+          <h3 id="m1Title" class="font-tech text-base sm:text-lg font-bold text-slate-100">Hand & Wrist Scan</h3>
+        </div>
+        <div class="text-xs font-mono text-cyan-300 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+          Streak: <span id="m1Streak" class="font-bold text-amber-400">x1</span>
+        </div>
+      </div>
+
+      <!-- Scanner Viewing Console -->
+      <div class="bg-slate-950 border-2 border-cyan-500/40 rounded-3xl p-3 sm:p-6 shadow-2xl relative overflow-hidden glow-border">
+        <div class="scan-line"></div>
+
+        <!-- Interactive Lens Canvas Area -->
+        <div class="relative w-full h-[320px] sm:h-[420px] bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 cursor-crosshair flex items-center justify-center" id="canvasContainer">
+          <canvas id="scanCanvas" class="w-full h-full block"></canvas>
+          
+          <!-- Instructions Overlay Banner -->
+          <div class="absolute top-3 left-3 bg-slate-950/85 backdrop-blur border border-cyan-500/30 px-3 py-1.5 rounded-xl text-[11px] text-cyan-300 flex items-center gap-2 pointer-events-none">
+            <i class="fa-solid fa-hand-pointer animate-bounce"></i>
+            <span id="m1CanvasInstruction">Drag or tap lens to uncover X-Ray view!</span>
+          </div>
+        </div>
+
+        <!-- Diagnostic Question Box -->
+        <div class="mt-4 sm:mt-6 bg-slate-900/90 border border-slate-800 p-4 rounded-2xl space-y-4">
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-300 flex items-center justify-center shrink-0 font-bold text-sm">
+              <i class="fa-solid fa-stethoscope"></i>
+            </div>
+            <p id="m1Question" class="text-xs sm:text-sm font-semibold text-slate-200">
+              Examine the body scan using your X-Ray lens. What anomaly or finding is clearly visible?
+            </p>
+          </div>
+
+          <!-- Options Grid -->
+          <div id="m1OptionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <!-- Dynamic Options populated by JS -->
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= VIEW 2: MACHINE MATCHER ================= -->
+    <section id="mode2View" class="hidden space-y-6 max-w-4xl mx-auto w-full">
+      
+      <!-- Top Bar -->
+      <div class="flex items-center justify-between bg-slate-900/90 border border-blue-500/30 p-3 sm:p-4 rounded-2xl">
+        <button onclick="switchView('menu')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left"></i> <span id="backBtn2">Menu</span>
+        </button>
+        <div class="text-center">
+          <span id="m2Progress" class="text-[11px] font-bold text-blue-400 uppercase tracking-wider">Scenario 1 of 5</span>
+          <h3 class="font-tech text-base sm:text-lg font-bold text-slate-100" id="m2HeaderTitle">Modality Matcher</h3>
+        </div>
+        <div class="text-xs font-mono text-blue-300 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+          Match Game
+        </div>
+      </div>
+
+      <!-- Clinical Scenario Card -->
+      <div class="bg-slate-900 border border-blue-500/40 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-6">
+        <div class="bg-gradient-to-r from-blue-950/60 via-slate-900 to-slate-950 p-5 rounded-2xl border border-blue-500/20 flex flex-col sm:flex-row items-center gap-4">
+          <div class="w-16 h-16 rounded-2xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-blue-300 text-3xl shrink-0" id="m2ScenarioIcon">
+            <i class="fa-solid fa-baby"></i>
+          </div>
+          <div class="space-y-1 text-center sm:text-left">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-400/20" id="m2Tag">Clinical Scenario</span>
+            <h4 id="m2ScenarioTitle" class="font-tech text-lg sm:text-xl font-bold text-slate-100">Checking Unborn Baby</h4>
+            <p id="m2ScenarioDesc" class="text-xs text-slate-300 leading-relaxed">
+              Checking fetus growth safely without using ionizing radiation.
+            </p>
+          </div>
+        </div>
+
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400 text-center" id="m2Prompt">Select the correct machine for this patient:</p>
+
+        <!-- Dynamic Modality Options Grid with Visual Machine Cards -->
+        <div id="m2ModalityGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          <!-- Modalities populated by JS -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ================= VIEW 3: RADIOLOGY MYTHBUSTERS ================= -->
+    <section id="mode3View" class="hidden space-y-6 max-w-3xl mx-auto w-full">
+      
+      <!-- Top Bar -->
+      <div class="flex items-center justify-between bg-slate-900/90 border border-teal-500/30 p-3 sm:p-4 rounded-2xl">
+        <button onclick="switchView('menu')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left"></i> <span id="backBtn3">Menu</span>
+        </button>
+        <div class="text-center">
+          <span id="m3Progress" class="text-[11px] font-bold text-teal-400 uppercase tracking-wider">Myth 1 of 7</span>
+          <h3 class="font-tech text-base sm:text-lg font-bold text-slate-100" id="m3HeaderTitle">Radiology MythBusters</h3>
+        </div>
+        <div class="text-xs font-mono text-teal-300 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+          Fact Check
+        </div>
+      </div>
+
+      <!-- Myth Card -->
+      <div class="bg-slate-900 border border-teal-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl text-center space-y-6 relative overflow-hidden">
+        
+        <div class="w-16 h-16 mx-auto rounded-full bg-teal-500/20 border border-teal-400/40 flex items-center justify-center text-teal-300 text-2xl">
+          <i class="fa-solid fa-lightbulb"></i>
+        </div>
+
+        <div class="space-y-2 max-w-xl mx-auto">
+          <span class="text-[10px] font-bold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-400/20" id="m3Tag">Fact or Myth?</span>
+          <h3 id="m3Statement" class="font-tech text-xl sm:text-2xl font-bold text-slate-100 leading-snug">
+            "Getting a simple chest X-Ray will cause your body to glow in the dark."
+          </h3>
+        </div>
+
+        <!-- Binary Choice Action Buttons -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md mx-auto pt-2">
+          <button onclick="submitMythChoice(false)" class="p-4 rounded-2xl bg-rose-950/80 hover:bg-rose-900 border-2 border-rose-500/40 text-rose-200 font-tech text-lg sm:text-xl font-bold transition transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-2">
+            <i class="fa-solid fa-xmark text-red-400 text-xl"></i> <span id="m3BtnMyth">MYTH (PALSU)</span>
+          </button>
+          <button onclick="submitMythChoice(true)" class="p-4 rounded-2xl bg-emerald-950/80 hover:bg-emerald-900 border-2 border-emerald-500/40 text-emerald-200 font-tech text-lg sm:text-xl font-bold transition transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-2">
+            <i class="fa-solid fa-check text-emerald-400 text-xl"></i> <span id="m3BtnFact">FACT (BENAR)</span>
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= VIEW 4: CERTIFICATE & BADGE GENERATOR ================= -->
+    <section id="mode4View" class="hidden space-y-6 max-w-2xl mx-auto w-full">
+      
+      <!-- Top Bar -->
+      <div class="flex items-center justify-between bg-slate-900/90 border border-amber-500/30 p-3 sm:p-4 rounded-2xl">
+        <button id="certBackBtn" onclick="switchView('menu')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left"></i> <span id="backBtn4">Menu</span>
+        </button>
+        <h3 class="font-tech text-base sm:text-lg font-bold text-amber-300" id="certHeaderTitle">Junior Diagnostic Radiographer Badge</h3>
+        <button onclick="toggleCameraMode()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-xs flex items-center gap-2 border border-amber-500/30">
+          <i class="fa-solid fa-camera"></i> <span id="certPhotoBtn">Photo Mode</span>
+        </button>
+      </div>
+
+      <!-- Recipient Input Box -->
+      <div id="certInputBox" class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2">
+        <label for="playerNameInput" class="text-xs font-bold uppercase text-amber-400 block" id="certInputLabel">Recipient Name / Nama Penerima:</label>
+        <input type="text" id="playerNameInput" value="Future Diagnostic Radiographer" class="bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-sm font-semibold text-slate-100 focus:outline-none focus:border-amber-400 w-full" oninput="updateCertName()">
+      </div>
+
+      <!-- Action Toolbar (Streamlined Receiving Options) -->
+      <div id="certActionToolbar" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <button onclick="downloadBadgePNG()" class="p-3 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center justify-center gap-2 transition active:scale-95 shadow-md">
+          <i class="fa-solid fa-download text-base"></i> <span id="btnLabelPNG">Save Image (PNG)</span>
+        </button>
+        <button onclick="window.print()" class="p-3 rounded-xl bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center justify-center gap-2 transition active:scale-95 shadow-md">
+          <i class="fa-solid fa-print text-base"></i> <span id="btnLabelPrint">Print Badge</span>
+        </button>
+      </div>
+
+      <!-- Digital Printable Badge Card (Clickable for Celebration Sound Effect) -->
+      <div id="certificateCard" onclick="sound.playCelebrationFanfare()" title="Click badge to hear celebration fanfare and crowd cheering!" class="bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border-4 border-amber-400/60 p-6 sm:p-8 rounded-3xl text-center space-y-5 relative overflow-hidden shadow-2xl cursor-pointer hover:border-amber-300 transition-colors">
+        <div class="absolute top-2 right-2 text-amber-400/10 text-8xl pointer-events-none">
+          <i class="fa-solid fa-certificate"></i>
+        </div>
+
+        <div class="space-y-1">
+          <p class="text-[10px] uppercase font-bold tracking-widest text-amber-400" id="certBadgeOrg">PROSKIL 2026 MEGA PROGRAMME BADGE</p>
+          <h2 class="font-cyber text-2xl sm:text-3xl font-black text-slate-100" id="certBadgeTitle">JUNIOR DIAGNOSTIC RADIOGRAPHER</h2>
+          <p class="text-xs text-cyan-300 font-tech uppercase tracking-wider" id="certBadgeSub">Medical Imaging & Radiation Safety Champion</p>
+        </div>
+
+        <div class="py-3 border-y border-amber-400/30 space-y-2">
+          <p class="text-xs text-slate-400" id="certCertifiesThat">This certifies that</p>
+          <h3 id="certNameDisplay" class="font-tech text-2xl sm:text-3xl font-bold text-amber-300">Future Diagnostic Radiographer</h3>
+          <p class="text-xs text-slate-300 max-w-md mx-auto leading-relaxed" id="certBodyDesc">
+            has successfully demonstrated outstanding knowledge in radiation safety, X-ray scanning, and diagnostic modalities.
+          </p>
+        </div>
+
+        <!-- Rank & Score Summary -->
+        <div class="grid grid-cols-2 gap-4 text-xs font-tech pt-1">
+          <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+            <span class="text-slate-400 block text-[10px] uppercase" id="certRankLabel">RANK TITLE</span>
+            <span id="certRankDisplay" class="font-bold text-cyan-300 text-sm sm:text-base">Junior Scanner</span>
+          </div>
+          <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+            <span class="text-slate-400 block text-[10px] uppercase" id="certScoreLabel">FINAL SCORE</span>
+            <span id="certScoreDisplay" class="font-bold text-amber-400 text-sm sm:text-base">0 PTS</span>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Educational Feedback Popup Modal -->
+  <div id="explanationModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-slate-900 border-2 border-cyan-500/50 rounded-3xl max-w-md w-full p-6 text-center shadow-2xl transform scale-90 transition-transform duration-300 space-y-4">
+      
+      <div id="modalIconContainer" class="w-16 h-16 mx-auto rounded-full bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300 text-3xl">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+
+      <h3 id="modalTitle" class="font-tech text-2xl font-bold text-cyan-200">Correct Diagnosis!</h3>
+      <p id="modalBody" class="text-xs sm:text-sm text-slate-300 leading-relaxed bg-slate-950 p-4 rounded-xl border border-slate-800">
+        Explanation content goes here...
+      </p>
+
+      <button id="modalNextBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-sm shadow-lg transition transform active:scale-95">
+        Continue <i class="fa-solid fa-arrow-right ml-1"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Radiographer Educational Info Modal -->
+  <div id="radiographerModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-slate-900 border border-teal-500/40 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="font-cyber text-base sm:text-lg font-bold text-teal-300 flex items-center gap-2" id="radModalTitle">
+          <i class="fa-solid fa-user-nurse"></i> What is a Diagnostic Radiographer?
+        </h3>
+        <button onclick="closeRadiographerModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="space-y-3 text-xs sm:text-sm text-slate-300 leading-relaxed">
+        <p id="radModalP1">
+          <strong>Radiographers</strong> are certified medical imaging healthcare professionals who combine human anatomy, physics, and advanced technology to create diagnostic images inside the human body.
+        </p>
+
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+          <h4 class="font-bold text-teal-300 flex items-center gap-1.5" id="radModalPoint1Title"><i class="fa-solid fa-shield"></i> 1. Radiation Protection & ALARA</h4>
+          <p class="text-slate-400 text-xs" id="radModalPoint1Desc">They follow the ALARA principle (As Low As Reasonably Achievable) using lead aprons and targeted collimation to protect patients.</p>
+        </div>
+
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+          <h4 class="font-bold text-teal-300 flex items-center gap-1.5" id="radModalPoint2Title"><i class="fa-solid fa-heart-pulse"></i> 2. Patient Safety & Comfort</h4>
+          <p class="text-slate-400 text-xs" id="radModalPoint2Desc">They ensure zero ferromagnetic metals enter MRI suites, assist trauma emergency cases, and comfort anxious patients.</p>
+        </div>
+
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+          <h4 class="font-bold text-teal-300 flex items-center gap-1.5" id="radModalPoint3Title"><i class="fa-solid fa-calendar-check"></i> 3. World Radiography Day</h4>
+          <p class="text-slate-400 text-xs" id="radModalPoint3Desc">Celebrated annually on November 8th marking Wilhelm Röntgen's discovery of X-Rays in 1895!</p>
+        </div>
+      </div>
+
+      <button onclick="closeRadiographerModal()" class="w-full py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs transition" id="radModalClose">
+        Close Window
+      </button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer id="mainFooter" class="w-full text-center py-3 text-[11px] text-slate-500 z-10 border-t border-slate-900/60">
+    <span id="footerText">Designed for PROSKIL 2026 Mega Programme & Radiology Department HSAAS Booths</span>
+  </footer>
+
+  <script>
+    /* ================= DUAL LANGUAGE DICTIONARY (i18n) ================= */
+    let currentLang = 'en';
+
+    const translations = {
+      en: {
+        subHeading: "X-RAY VISION & MACHINE MASTER",
+        scoreLabel: "SCORE",
+        heroTag: "PROSKIL 2026 Mega Programme & Radiology Department HSAAS Booth",
+        heroTitle: "Discover the Power of <span class='text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300'>Medical Imaging!</span>",
+        heroDesc: "Learn how Diagnostic Radiographers use invisible rays, magnetic fields, and sound waves to safely see inside the human body and save lives every day!",
+        mode1CardTitle: "1. X-Ray Vision Scanner",
+        mode1CardDesc: "Drag the lens to scan body layers! Discover hidden bone fractures, foreign swallowed objects, and implants.",
+        mode2CardTitle: "2. Machine Matcher",
+        mode2CardDesc: "Match medical cases with X-Ray, CT Scan, MRI, Ultrasound, or Mammography machines.",
+        mode3CardTitle: "3. Radiology MythBusters",
+        mode3CardDesc: "Do X-Rays make you glow? Can you wear metal in MRI? Test your knowledge in this fast-paced myth quiz!",
+        mode4CardTitle: "4. Junior Diagnostic Radiographer Badge",
+        mode4CardDesc: "Earn your official Junior Diagnostic Radiographer badge certificate with your custom name and score summary!",
+        playLabel: "Play Mode",
+        viewLabel: "View Badge",
+        infoBannerTitle: "Meet Your Healthcare Hero: The Diagnostic Radiographer",
+        infoBannerDesc: "Diagnostic Radiographers apply physics, radiation safety (ALARA), and compassion to produce clear diagnostic images.",
+        learnMoreBtn: "Learn About Diagnostic Radiographers",
+        backBtn: "Menu",
+        m1CanvasInstruction: "Drag or tap lens to uncover X-Ray view!",
+        m2HeaderTitle: "Modality Matcher",
+        m2Tag: "Clinical Scenario",
+        m2Prompt: "Select the correct machine for this patient:",
+        m3HeaderTitle: "Radiology MythBusters",
+        m3Tag: "Fact or Myth?",
+        m3BtnMyth: "MYTH (PALSU)",
+        m3BtnFact: "FACT (BENAR)",
+        certHeaderTitle: "Junior Diagnostic Radiographer Badge",
+        certPrintBtn: "Print Badge",
+        certPhotoBtn: "Photo Mode",
+        btnLabelPNG: "Save Image (PNG)",
+        btnLabelPrint: "Print Badge",
+        certInputLabel: "Recipient Name / Nama Penerima:",
+        certBadgeOrg: "PROSKIL 2026 MEGA PROGRAMME BADGE",
+        certBadgeTitle: "JUNIOR DIAGNOSTIC RADIOGRAPHER",
+        certBadgeSub: "Medical Imaging & Radiation Safety Champion",
+        certCertifiesThat: "This certifies that",
+        certBodyDesc: "has successfully demonstrated outstanding knowledge in radiation safety, X-ray scanning, and diagnostic modalities.",
+        certRankLabel: "RANK TITLE",
+        certScoreLabel: "FINAL SCORE",
+        radModalTitle: "What is a Diagnostic Radiographer?",
+        radModalP1: "<strong>Radiographers</strong> are certified medical imaging healthcare professionals who combine human anatomy, physics, and advanced technology to create diagnostic images inside the human body.",
+        radModalPoint1Title: "1. Radiation Protection & ALARA",
+        radModalPoint1Desc: "They follow the ALARA principle (As Low As Reasonably Achievable) using lead aprons and targeted collimation to protect patients.",
+        radModalPoint2Title: "2. Patient Safety & Comfort",
+        radModalPoint2Desc: "They ensure zero ferromagnetic metals enter MRI suites, assist trauma emergency cases, and comfort anxious patients.",
+        radModalPoint3Title: "3. World Radiography Day",
+        radModalPoint3Desc: "Celebrated annually on November 8th marking Wilhelm Röntgen's discovery of X-Rays in 1895!",
+        radModalClose: "Close Window",
+        footerText: "Designed for PROSKIL 2026 Mega Programme & Radiology Department HSAAS Booths"
+      },
+      ms: {
+        subHeading: "VISI SINAR-X & PAKAR MESIN RADIOLOGI",
+        scoreLabel: "MARKAH",
+        heroTag: "Mega Program PROSKIL 2026 & Pameran Jabatan Radiology HSAAS",
+        heroTitle: "Terokai Keajaiban <span class='text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300'>Pengimejan Perubatan!</span>",
+        heroDesc: "Ketahui bagaimana Ahli Radiografi Diagnostik menggunakan sinar tidak kelihatan, medan magnet, dan gelombang bunyi untuk melihat dalam tubuh manusia secara selamat!",
+        mode1CardTitle: "1. Pengimbas Sinar-X",
+        mode1CardDesc: "Lerek kanta imbasan! Kesan tulang patah, objek asing tertelan, dan implan di dalam tubuh.",
+        mode2CardTitle: "2. Padanan Mesin",
+        mode2CardDesc: "Padankan situasi klinikal dengan mesin Sinar-X, Imbasan CT, MRI, Ultrabunyi, atau Mamografi.",
+        mode3CardTitle: "3. Mitos vs Fakta Radiologi",
+        mode3CardDesc: "Adakah Sinar-X membuatkan anda bersinar? Uji pengetahuan anda dalam kuiz mitos radiologi ini!",
+        mode4CardTitle: "4. Lencana Ahli Radiografi Diagnostik Muda",
+        mode4CardDesc: "Dapatkan sijil lencana Ahli Radiografi Diagnostik Muda rasmi dengan nama dan ringkasan markah anda!",
+        playLabel: "Mula Main",
+        viewLabel: "Lihat Sijil",
+        infoBannerTitle: "Kenali Wira Kesihatan Anda: Ahli Radiografi Diagnostik",
+        infoBannerDesc: "Ahli Radiografi Diagnostik mengaplikasikan fizik, keselamatan radiasi (ALARA), dan keprihatinan untuk menghasilkan imej diagnostik.",
+        learnMoreBtn: "Ketahui Peranan Ahli Radiografi Diagnostik",
+        backBtn: "Menu",
+        m1CanvasInstruction: "Seret kanta untuk melihat paparan Sinar-X!",
+        m2HeaderTitle: "Padanan Modaliti",
+        m2Tag: "Senario Klinikal",
+        m2Prompt: "Pilih mesin yang betul untuk pesakit ini:",
+        m3HeaderTitle: "Mitos vs Fakta Radiologi",
+        m3Tag: "Fakta atau Mitos?",
+        m3BtnMyth: "MITOS (PALSU)",
+        m3BtnFact: "FAKTA (BENAR)",
+        certHeaderTitle: "Lencana Ahli Radiografi Diagnostik Muda",
+        certPrintBtn: "Cetak Sijil",
+        certPhotoBtn: "Mod Foto",
+        btnLabelPNG: "Simpan Imej (PNG)",
+        btnLabelPrint: "Cetak Lencana",
+        certInputLabel: "Nama Penerima:",
+        certBadgeOrg: "LENCANA MEGA PROGRAM PROSKIL 2026",
+        certBadgeTitle: "AHLI RADIOGRAFI DIAGNOSTIK MUDA",
+        certBadgeSub: "Juara Pengimejan Perubatan & Keselamatan Radiasi",
+        certCertifiesThat: "Dengan ini mengesahkan bahawa",
+        certBodyDesc: "telah berjaya menunjukkan pengetahuan cemerlang dalam keselamatan radiasi, imbasan sinar-X, dan modaliti diagnostik.",
+        certRankLabel: "GELARAN PANGKAT",
+        certScoreLabel: "MARKAH AKHIR",
+        radModalTitle: "Apakah Itu Ahli Radiografi Diagnostik?",
+        radModalP1: "<strong>Ahli Radiografi Diagnostik</strong> ialah profesional perubatan bertauliah yang menggabungkan anatomi, fizik, dan teknologi tinggi untuk menghasilkan imej diagnostik organ dalaman pesakit.",
+        radModalPoint1Title: "1. Perlindungan Radiasi & ALARA",
+        radModalPoint1Desc: "Mematuhi prinsip ALARA (Rendah Yang Boleh Dicapai) menggunakan apron plumbum bagi melindungi pesakit.",
+        radModalPoint2Title: "2. Keselamatan & Keselesaan Pesakit",
+        radModalPoint2Desc: "Memastikan tiada logam berpenarik magnet memasuki bilik MRI dan membantu pesakit kecemasan trauma.",
+        radModalPoint3Title: "3. Hari Radiografi Sedunia",
+        radModalPoint3Desc: "Diraikan pada 8 November setiap tahun sempena penemuan Sinar-X oleh Wilhelm Röntgen pada tahun 1895!",
+        radModalClose: "Tutup Tetingkap",
+        footerText: "Direka Khusus Untuk Acara Kesihatan Awam & Pameran Hospital"
+      }
+    };
+
+    /* ================= HIGH-TECH WEB AUDIO SYNTHESIS ENGINE ================= */
+    class HighTechAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+        this.bgmPlaying = false;
+        this.bgmTimer = null;
+        this.stepIndex = 0;
+        this.lastScanTime = 0;
+        
+        // Synthwave Bassline & Arpeggio Sequences
+        this.bassNotes = [164.81, 164.81, 196.00, 164.81, 220.00, 196.00, 146.83, 164.81];
+        this.arpNotes  = [329.63, 392.00, 493.88, 659.25, 587.33, 493.88, 392.00, 329.63];
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) {
+            this.ctx = new AudioCtx();
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      /* HIGH OCTANE BGM SEQUENCER */
+      startBGM() {
+        if (this.bgmPlaying || this.muted) return;
+        this.init();
+        this.bgmPlaying = true;
+        this.stepIndex = 0;
+
+        const bpm = 124;
+        const stepInterval = (60 / bpm / 2) * 1000;
+
+        this.bgmTimer = setInterval(() => {
+          if (!this.bgmPlaying || this.muted) return;
+          this.playBGMStep();
+          this.stepIndex = (this.stepIndex + 1) % 16;
+        }, stepInterval);
+      }
+
+      stopBGM() {
+        this.bgmPlaying = false;
+        if (this.bgmTimer) {
+          clearInterval(this.bgmTimer);
+          this.bgmTimer = null;
+        }
+      }
+
+      playBGMStep() {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+
+        // 1. Soft Heartbeat Pulse Kick
+        if (this.stepIndex % 4 === 0) {
+          const kickOsc = this.ctx.createOscillator();
+          const kickGain = this.ctx.createGain();
+          kickOsc.type = 'sine';
+          kickOsc.frequency.setValueAtTime(110, now);
+          kickOsc.frequency.exponentialRampToValueAtTime(32, now + 0.1);
+          kickGain.gain.setValueAtTime(0.18, now);
+          kickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+          kickOsc.connect(kickGain);
+          kickGain.connect(this.ctx.destination);
+          kickOsc.start(now);
+          kickOsc.stop(now + 0.11);
+        }
+
+        // 2. High Octane Bass Drive
+        if (this.stepIndex % 2 === 0) {
+          const noteIndex = Math.floor(this.stepIndex / 2) % this.bassNotes.length;
+          const bassFreq = this.bassNotes[noteIndex];
+
+          const bassOsc = this.ctx.createOscillator();
+          const bassFilter = this.ctx.createBiquadFilter();
+          const bassGain = this.ctx.createGain();
+
+          bassOsc.type = 'sawtooth';
+          bassOsc.frequency.setValueAtTime(bassFreq, now);
+
+          bassFilter.type = 'lowpass';
+          bassFilter.frequency.setValueAtTime(650, now);
+          bassFilter.frequency.exponentialRampToValueAtTime(180, now + 0.12);
+
+          bassGain.gain.setValueAtTime(0.06, now);
+          bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+
+          bassOsc.connect(bassFilter);
+          bassFilter.connect(bassGain);
+          bassGain.connect(this.ctx.destination);
+          bassOsc.start(now);
+          bassOsc.stop(now + 0.13);
+        }
+
+        // 3. Cyber Arpeggio Melody
+        if (this.stepIndex % 2 === 1) {
+          const arpIndex = (this.stepIndex) % this.arpNotes.length;
+          const arpFreq = this.arpNotes[arpIndex];
+
+          const arpOsc = this.ctx.createOscillator();
+          const arpGain = this.ctx.createGain();
+
+          arpOsc.type = 'triangle';
+          arpOsc.frequency.setValueAtTime(arpFreq, now);
+
+          arpGain.gain.setValueAtTime(0.025, now);
+          arpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+          arpOsc.connect(arpGain);
+          arpGain.connect(this.ctx.destination);
+          arpOsc.start(now);
+          arpOsc.stop(now + 0.09);
+        }
+      }
+
+      /* SFX 1: UI Button Hover / Click */
+      playClickSFX() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(750, now);
+        osc.frequency.exponentialRampToValueAtTime(1100, now + 0.04);
+
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.04);
+      }
+
+      /* SFX 2: ULTRA-SOFT GLASS SCAN HUM */
+      playScanHum() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        
+        if (now - this.lastScanTime < 0.1) return;
+        this.lastScanTime = now;
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const filter = this.ctx.createBiquadFilter();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(260, now + 0.08);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(450, now);
+
+        gain.gain.setValueAtTime(0.003, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.08);
+      }
+
+      /* SFX 3: Correct Answer Arcade Fanfare */
+      playCorrectSFX(streak = 1) {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const baseMult = 1 + Math.min(streak * 0.05, 0.4);
+
+        const chordNotes = [523.25 * baseMult, 659.25 * baseMult, 783.99 * baseMult, 1046.50 * baseMult];
+
+        chordNotes.forEach((f, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(f, now + idx * 0.06);
+
+          gain.gain.setValueAtTime(0, now + idx * 0.06);
+          gain.gain.linearRampToValueAtTime(0.16, now + idx * 0.06 + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.3);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + idx * 0.06);
+          osc.stop(now + idx * 0.06 + 0.35);
+        });
+      }
+
+      /* SFX 4: Soft Low-Tone Wrong Answer Pulse */
+      playWrongSFX() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.setValueAtTime(130, now + 0.12);
+
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.28);
+      }
+
+      /* SFX 5: SYNTHESIZED APPLAUSE & CROWD CHEERING */
+      playApplauseSFX() {
+        if (this.muted || !this.ctx) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const duration = 2.4;
+
+        // 1. White Noise Buffer for Crowd Clapping Texture
+        const bufferSize = this.ctx.sampleRate * duration;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+
+        const crowdNoise = this.ctx.createBufferSource();
+        crowdNoise.buffer = buffer;
+
+        const noiseFilter = this.ctx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.frequency.setValueAtTime(1600, now);
+        noiseFilter.Q.setValueAtTime(1.1, now);
+
+        const noiseGain = this.ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.001, now);
+        noiseGain.gain.linearRampToValueAtTime(0.16, now + 0.25);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        crowdNoise.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(this.ctx.destination);
+
+        crowdNoise.start(now);
+        crowdNoise.stop(now + duration);
+
+        // 2. Multi-Grained Rapid Clapping Bursts (Simulates individual hands clapping)
+        const totalClaps = 45;
+        for (let i = 0; i < totalClaps; i++) {
+          const clapOffset = Math.random() * (duration - 0.3);
+          const clapTime = now + clapOffset;
+
+          const clapSource = this.ctx.createBufferSource();
+          clapSource.buffer = buffer;
+
+          const clapFilter = this.ctx.createBiquadFilter();
+          clapFilter.type = 'bandpass';
+          clapFilter.frequency.setValueAtTime(1100 + Math.random() * 900, clapTime);
+          clapFilter.Q.setValueAtTime(2.8, clapTime);
+
+          const clapGain = this.ctx.createGain();
+          const peakVol = 0.08 + Math.random() * 0.08;
+          clapGain.gain.setValueAtTime(0.001, clapTime);
+          clapGain.gain.linearRampToValueAtTime(peakVol, clapTime + 0.008);
+          clapGain.gain.exponentialRampToValueAtTime(0.001, clapTime + 0.06);
+
+          clapSource.connect(clapFilter);
+          clapFilter.connect(clapGain);
+          clapGain.connect(this.ctx.destination);
+
+          clapSource.start(clapTime);
+          clapSource.stop(clapTime + 0.08);
+        }
+
+        // 3. Cheering Vocal Formant Swell ("Woohoo / Yeah!")
+        const cheerOsc = this.ctx.createOscillator();
+        const cheerGain = this.ctx.createGain();
+        const cheerFilter = this.ctx.createBiquadFilter();
+
+        cheerOsc.type = 'sawtooth';
+        cheerOsc.frequency.setValueAtTime(240, now + 0.15);
+        cheerOsc.frequency.linearRampToValueAtTime(360, now + 0.6);
+        cheerOsc.frequency.exponentialRampToValueAtTime(210, now + duration);
+
+        cheerFilter.type = 'bandpass';
+        cheerFilter.frequency.setValueAtTime(850, now + 0.15);
+        cheerFilter.Q.setValueAtTime(3.8, now + 0.15);
+
+        cheerGain.gain.setValueAtTime(0.001, now);
+        cheerGain.gain.linearRampToValueAtTime(0.07, now + 0.35);
+        cheerGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        cheerOsc.connect(cheerFilter);
+        cheerFilter.connect(cheerGain);
+        cheerGain.connect(this.ctx.destination);
+
+        cheerOsc.start(now + 0.15);
+        cheerOsc.stop(now + duration);
+      }
+
+      /* SFX 6: GRAND CONGRATULATORY CELEBRATION FANFARE FOR BADGE */
+      playCelebrationFanfare() {
+        if (this.muted) return;
+        this.init();
+
+        // Trigger Applause & Cheering
+        this.playApplauseSFX();
+
+        const now = this.ctx.currentTime;
+
+        // Festive Trumpet Melody: "Da-Da-Da-DUM! TADA!"
+        const melody = [
+          { freq: 523.25, time: 0.00, dur: 0.12, type: 'triangle' }, // C5
+          { freq: 523.25, time: 0.14, dur: 0.12, type: 'triangle' }, // C5
+          { freq: 523.25, time: 0.28, dur: 0.12, type: 'triangle' }, // C5
+          { freq: 659.25, time: 0.42, dur: 0.25, type: 'triangle' }, // E5
+          { freq: 783.99, time: 0.70, dur: 0.15, type: 'triangle' }, // G5
+          { freq: 1046.50, time: 0.88, dur: 0.85, type: 'triangle' } // C6 (Grand Finale)
+        ];
+
+        melody.forEach(note => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = note.type;
+          osc.frequency.setValueAtTime(note.freq, now + note.time);
+
+          gain.gain.setValueAtTime(0, now + note.time);
+          gain.gain.linearRampToValueAtTime(0.22, now + note.time + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + note.time + note.dur);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + note.time);
+          osc.stop(now + note.time + note.dur + 0.05);
+        });
+
+        // Grand Finale Brass Major Chord Resolution (C5 - E5 - G5 - C6 - E6)
+        const chordFreqs = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+        chordFreqs.forEach(freq => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(freq, now + 0.88);
+
+          const filter = this.ctx.createBiquadFilter();
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(2200, now + 0.88);
+
+          gain.gain.setValueAtTime(0, now + 0.88);
+          gain.gain.linearRampToValueAtTime(0.09, now + 0.90);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.85);
+
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(now + 0.88);
+          osc.stop(now + 1.90);
+        });
+
+        // Cascading Magical Chime Sparkles
+        const chimes = [1046.50, 1318.51, 1567.98, 2093.00, 2637.02];
+        chimes.forEach((f, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(f, now + 0.95 + i * 0.06);
+
+          gain.gain.setValueAtTime(0.05, now + 0.95 + i * 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.95 + i * 0.06 + 0.35);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(now + 0.95 + i * 0.06);
+          osc.stop(now + 0.95 + i * 0.06 + 0.4);
+        });
+      }
+    }
+
+    const sound = new HighTechAudioEngine();
+
+    function toggleAudio() {
+      sound.init();
+      if (sound.bgmPlaying) {
+        sound.stopBGM();
+        sound.muted = true;
+        document.getElementById('bgmIcon').className = 'fa-solid fa-volume-xmark text-rose-400';
+        document.getElementById('bgmLabel').textContent = 'MUTED';
+      } else {
+        sound.muted = false;
+        sound.startBGM();
+        document.getElementById('bgmIcon').className = 'fa-solid fa-compact-disc text-cyan-300 audio-active';
+        document.getElementById('bgmLabel').textContent = 'MUSIC ON';
+      }
+    }
+
+    /* GAME STATE */
+    let gameState = {
+      score: 0,
+      streak: 1,
+      mode1Index: 0,
+      mode2Index: 0,
+      mode3Index: 0,
+      playerName: "Future Diagnostic Radiographer",
+      cameraMode: false
+    };
+
+    /* INTEGRATED IMAGE PRELOADER FOR REAL X-RAY IMAGES */
+    const caseImages = {};
+    const imageSources = {
+      hand: "hand_xray.jpg",
+      chest: "chest.jpg",
+      arm: "arm.jpg",
+      knee: "knee.jpg"
+    };
+
+    function preloadGameImages() {
+      for (let key in imageSources) {
+        caseImages[key] = new Image();
+        caseImages[key].onload = () => {
+          if (!document.getElementById('mode1View').classList.contains('hidden')) {
+            drawScanScene();
+          }
+        };
+        caseImages[key].src = imageSources[key];
+      }
+    }
+
+    /* MODE 1 DATA: X-Ray Cases */
+    const mode1Cases = [
+      {
+        type: "hand",
+        correctIndex: 1,
+        title: { en: "Hand & Wrist Scan", ms: "Imbasan Tangan & Pergelangan" },
+        question: {
+          en: "Move the X-Ray lens over the patient's hand. What abnormality or object is present?",
+          ms: "Gerakkan kanta Sinar-X ke atas tangan pesakit. Apakah penemuan atau objek yang kelihatan?"
+        },
+        options: {
+          en: ["Fractured wrist bone", "Metallic ring on finger", "Swallowed coin", "Dental filling"],
+          ms: ["Tulang pergelangan patah", "Cincin logam di jari", "Duit syiling tertelan", "Tambalan gigi"]
+        },
+        explanation: {
+          en: "Correct! The scan clearly shows a dense metallic ring on the ring finger. Diagnostic Radiographers remind patients to remove jewelry before scans to avoid image artifacts.",
+          ms: "Tepat! Imbasan mendedahkan cincin logam berketumpatan tinggi. Ahli Radiografi Diagnostik mengingatkan pesakit untuk menanggalkan barangan kemas sebelum imbasan."
+        }
+      },
+      {
+        type: "chest",
+        correctIndex: 0,
+        title: { en: "Pediatric Chest Scan", ms: "Imbasan Dada Kanak-Kanak" },
+        question: {
+          en: "Scan the esophageal/chest area. What foreign body did the child swallow?",
+          ms: "Imbas kawasan dada/esofagus. Apakah objek asing yang tertelan oleh kanak-kanak ini?"
+        },
+        options: {
+          en: ["Swallowed metallic coin", "Safety pin", "Broken rib bone", "Pneumonia shadow"],
+          ms: ["Syiling logam tertelan", "Pin keselamatan", "Tulang rusuk patah", "Bayangan radang paru-paru"]
+        },
+        explanation: {
+          en: "Great spot! A swallowed metallic coin appears bright radio-opaque white because dense metal blocks X-rays.",
+          ms: "Syabas! Syiling logam kelihatan putih terang kerana logam padat menyekat laluan sinar-X."
+        }
+      },
+      {
+        type: "arm",
+        correctIndex: 2,
+        title: { en: "Forearm Fracture Assessment", ms: "Penilaian Patah Tulang Lengan" },
+        question: {
+          en: "Scan along the forearm bones (Radius & Ulna). What condition is present?",
+          ms: "Imbas sepanjang tulang lengan. Apakah keadaan yang berlaku?"
+        },
+        options: {
+          en: ["Normal unbroken bones", "Dislocated elbow", "Ulna bone fracture", "Surgical metal plate"],
+          ms: ["Tulang normal tidak patah", "Sendi siku terkeluar", "Tulang Ulna patah", "Plat logam pembedahan"]
+        },
+        explanation: {
+          en: "Excellent diagnosis! The scanner reveals a clear fracture break in the ulna shaft. Diagnostic Radiographers obtain precise orthogonal views (AP & Lateral) to evaluate fractures.",
+          ms: "Diagnosis cemerlang! Imbasan menunjukkan keretakan jelas pada tulang ulna. Ahli Radiografi Diagnostik mengambil pelbagai sudut pandangan tepat untuk mengesan fraktur."
+        }
+      },
+      {
+        type: "knee",
+        correctIndex: 0,
+        title: { en: "Knee Joint Assessment", ms: "Penilaian Sendi Lutut" },
+        question: {
+          en: "Scan the knee joint space. What medical device is observed inside the leg?",
+          ms: "Imbas kawasan sendi lutut. Apakah peranti perubatan yang terdapat di dalam kaki?"
+        },
+        options: {
+          en: ["Total knee joint replacement implant", "Torn ligament", "Surgical needle", "Bone cyst"],
+          ms: ["Implan gantian sendi lutut", "Urat ligamen koyak", "Jarum pembedahan", "Sista tulang"]
+        },
+        explanation: {
+          en: "Spot on! The patient has a total prosthetic knee joint replacement. X-rays allow orthopedic surgeons to monitor joint placement and integrity.",
+          ms: "Tepat sekali! Pesakit mempunyai implan tiruan gantian sendi lutut. Sinar-X membolehkan pakar ortopedik menilai integriti implan."
+        }
+      }
+    ];
+
+    /* MODE 2 DATA: Machine Matcher Scenarios */
+    const mode2Scenarios = [
+      {
+        icon: "fa-baby",
+        correct: "Ultrasound",
+        title: { en: "Checking an Unborn Baby's Growth", ms: "Pemeriksaan Tumbesaran Bayi Dalam Kandungan" },
+        desc: {
+          en: "A pregnant mother visits the clinic to check her baby's growth and heartbeat safely without any ionizing radiation.",
+          ms: "Ibu hamil menjalani pemeriksaan untuk melihat perkembangan dan degupan jantung bayi tanpa sebarang radiasi terion."
+        },
+        explanation: {
+          en: "Correct! Ultrasound uses harmless high-frequency sound waves (not radiation) to safely image fetal development in real-time.",
+          ms: "Tepat! Ultrabunyi menggunakan gelombang bunyi berfrekuensi tinggi (tanpa radiasi) untuk melihat fetus secara selamat."
+        }
+      },
+      {
+        icon: "fa-brain",
+        correct: "CT Scan",
+        title: { en: "Emergency Brain Scan After Head Injury", ms: "Imbasan Otak Kecemasan Selepas Kemalangan" },
+        desc: {
+          en: "An ER doctor needs a rapid 3D cross-sectional view of a patient's head within 2 minutes to check for skull fractures and acute bleeding.",
+          ms: "Doktor kecemasan memerlukan imbasan 3D kepala dengan pantas dalam masa 2 minit untuk mengesan pendarahan otak."
+        },
+        explanation: {
+          en: "Great choice! CT Scans use rotating X-ray detectors to construct detailed 3D cross-sectional images in seconds during emergencies.",
+          ms: "Pilihan tepat! Imbasan CT menggunakan sinar-X berputar untuk menghasilkan imej keratan rentas 3D dalam beberapa saat sahaja."
+        }
+      },
+      {
+        icon: "fa-person-running",
+        correct: "MRI",
+        title: { en: "Knee Ligament Tear (ACL Injury)", ms: "Koyakan Ligamen Lutut (Kecederaan ACL)" },
+        desc: {
+          en: "An athlete twisted their knee and suspects soft tissue ligament damage. The doctor needs high-contrast resolution of tendons and cartilage.",
+          ms: "Seorang atlet mengalami kecederaan lutut. Doktor memerlukan imej berdefinisi tinggi bagi tisu lembut seperti ligamen dan rawan."
+        },
+        explanation: {
+          en: "Spot on! MRI uses strong magnetic fields and radio waves to generate superior contrast images of soft tissues without radiation.",
+          ms: "Tepat sekali! MRI menggunakan medan magnet kuat dan gelombang radio untuk menghasilkan imej tisu lembut tanpa radiasi."
+        }
+      },
+      {
+        icon: "fa-bone",
+        correct: "X-Ray",
+        title: { en: "Checking a Broken Arm Bone", ms: "Pemeriksaan Patah Tulang Lengan" },
+        desc: {
+          en: "A child fell off a bicycle and cannot move their wrist. The doctor needs a fast image to check for bone fractures.",
+          ms: "Kanak-kanak terjatuh dari basikal dan mengalami kesakitan pergelangan. Doktor memerlukan gambar pantas untuk mengesan patah tulang."
+        },
+        explanation: {
+          en: "Correct! Standard Digital X-Rays are the fastest and most accessible method to evaluate bone fractures.",
+          ms: "Tepat! Sinar-X Digital adalah kaedah terpantas dan paling utama untuk menilai keretakan tulang."
+        }
+      },
+      {
+        icon: "fa-hospital",
+        correct: "Mammography",
+        title: { en: "Routine Preventive Breast Health Screening", ms: "Saringan Kesihatan Payudara Berkala" },
+        desc: {
+          en: "A woman visits for her annual preventive health screening to detect early micro-calcifications or subtle tissue changes.",
+          ms: "Seorang wanita menjalani saringan kesihatan tahunan untuk mengesan sebarang perubahan tisu pada peringkat awal."
+        },
+        explanation: {
+          en: "Excellent! Mammography uses specialized low-dose X-Rays designed specifically to image soft breast tissue.",
+          ms: "Cemerlang! Mamografi menggunakan sinar-X dos rendah khusus yang direka khas untuk pencitraan tisu payudara."
+        }
+      }
+    ];
+
+    /* MODALITIES LIST WITH INTEGRATED REAL MACHINE IMAGES */
+    const modalitiesList = [
+      { name: "X-Ray", label: { en: "X-Ray", ms: "Sinar-X" }, icon: "fa-x-ray", image: "dr.jpg" },
+      { name: "MRI", label: { en: "MRI", ms: "Imbasan MRI" }, icon: "fa-magnet", image: "mri.jpg" },
+      { name: "CT Scan", label: { en: "CT Scan", ms: "Imbasan CT" }, icon: "fa-circle-notch", image: "CT.jpg" },
+      { name: "Ultrasound", label: { en: "Ultrasound", ms: "Ultrabunyi" }, icon: "fa-wave-square", image: "us.jpg" },
+      { name: "Mammography", label: { en: "Mammography", ms: "Mamografi" }, icon: "fa-hospital", image: "mmg.jpg" }
+    ];
+
+    /* MODE 3 DATA: MythBusters Quiz (7 Questions) */
+    const mode3Myths = [
+      {
+        isTrue: false,
+        statement: {
+          en: "Getting a simple chest X-Ray will cause your body to glow in the dark.",
+          ms: "Jalani imbasan Sinar-X dada akan membuatkan tubuh anda bersinar dalam gelap."
+        },
+        explanation: {
+          en: "BUSTED! X-rays pass through the body instantly like light through glass. No radiation remains in your body and you will not glow!",
+          ms: "MITOS! Sinar-X merentasi tubuh secara serta-merta seperti cahaya menerusi kaca. Tiada radiasi tersimpan dan anda tidak akan bersinar!"
+        }
+      },
+      {
+        isTrue: true,
+        statement: {
+          en: "Ultrasound and MRI machines do NOT use ionizing radiation.",
+          ms: "Mesin Ultrabunyi dan MRI TIDAK menggunakan radiasi terion."
+        },
+        explanation: {
+          en: "CONFIRMED! Ultrasound uses harmless sound waves, and MRI uses safe magnetic fields and radio waves.",
+          ms: "FAKTA! Ultrabunyi menggunakan gelombang bunyi, manakala MRI menggunakan medan magnet dan gelombang radio yang selamat."
+        }
+      },
+      {
+        isTrue: true,
+        statement: {
+          en: "You MUST remove metallic objects (keys, belts, hairpins) before an MRI scan.",
+          ms: "Anda MESTI menanggalkan barangan logam (kunci, tali pinggang) sebelum memasuki bilik MRI."
+        },
+        explanation: {
+          en: "CONFIRMED! MRI machines contain immensely powerful magnets that pull magnetic metals with high force.",
+          ms: "FAKTA! Mesin MRI mengandungi magnet sangat kuat yang boleh menarik objek logam dengan daya tinggi."
+        }
+      },
+      {
+        isTrue: false,
+        statement: {
+          en: "Diagnostic Radiographers are just 'button pushers' who stand behind a lead wall.",
+          ms: "Ahli Radiografi Diagnostik sekadar 'pembantu tekan butang' di sebalik dinding plumbum."
+        },
+        explanation: {
+          en: "BUSTED! Diagnostic Radiographers are highly skilled healthcare specialists qualified in human anatomy, physics, safety, and positioning!",
+          ms: "MITOS! Ahli Radiografi Diagnostik ialah profesional perubatan pakar dalam anatomi, fizik, keselamatan pesakit, dan teknik perposisian!"
+        }
+      },
+      {
+        isTrue: true,
+        statement: {
+          en: "ALARA stands for 'As Low As Reasonably Achievable' in radiation protection.",
+          ms: "ALARA bermaksud 'As Low As Reasonably Achievable' (Serendah Yang Boleh Dicapai) dalam keselamatan radiasi."
+        },
+        explanation: {
+          en: "CONFIRMED! Diagnostic Radiographers always use the lowest possible radiation dose necessary to produce clear diagnostic images.",
+          ms: "FAKTA! Ahli Radiografi Diagnostik sentiasa menggunakan dos radiasi paling minimum yang memadai untuk menghasilkan imej jelas."
+        }
+      },
+      {
+        isTrue: false,
+        statement: {
+          en: "Radiation stays floating in the air inside the X-ray room for several minutes after an exposure.",
+          ms: "Radiasi kekal terapung di dalam udara bilik Sinar-X selama beberapa minit selepas imbasan dilakukan."
+        },
+        explanation: {
+          en: "BUSTED! X-rays travel at the speed of light and vanish instantly when the exposure switch is released. No residual radiation lingers in the room air!",
+          ms: "MITOS! Sinar-X bergerak pada kelajuan cahaya dan hilang serta-merta sebaik sahaja imbasan selesai. Tiada sebarang baki radiasi terapung di udara!"
+        }
+      },
+      {
+        isTrue: false,
+        statement: {
+          en: "Pregnant women can NEVER undergo any X-ray examination under any circumstance.",
+          ms: "Wanita hamil TIDAK BOLEH langsung menjalani sebarang imbasan Sinar-X dalam apa jua keadaan."
+        },
+        explanation: {
+          en: "BUSTED! While non-ionizing scans (like Ultrasound or MRI) are preferred, medically necessary X-rays can be performed safely during pregnancy using targeted lead shielding and minimal doses.",
+          ms: "MITOS! Walaupun imbasan tanpa radiasi (Ultrabunyi/MRI) diutamakan, imbasan Sinar-X yang penting boleh dilakukan secara selamat jika diperlukan secara perubatan dengan menggunakan pelindung plumbum."
+        }
+      }
+    ];
+
+    /* LANGUAGE SWITCHER LOGIC */
+    function setLanguage(lang) {
+      sound.playClickSFX();
+      currentLang = lang;
+
+      if (lang === 'en') {
+        document.getElementById('langENBtn').className = 'px-2.5 py-1 rounded-lg text-xs font-bold transition duration-200 bg-cyan-500 text-slate-950';
+        document.getElementById('langMSBtn').className = 'px-2.5 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition duration-200';
+      } else {
+        document.getElementById('langMSBtn').className = 'px-2.5 py-1 rounded-lg text-xs font-bold transition duration-200 bg-cyan-500 text-slate-950';
+        document.getElementById('langENBtn').className = 'px-2.5 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition duration-200';
+      }
+
+      const dict = translations[lang];
+      document.getElementById('appSubHeading').textContent = dict.subHeading;
+      document.getElementById('scoreLabel').textContent = dict.scoreLabel;
+      document.getElementById('heroTag').textContent = dict.heroTag;
+      document.getElementById('heroTitle').innerHTML = dict.heroTitle;
+      document.getElementById('heroDesc').textContent = dict.heroDesc;
+
+      document.getElementById('mode1CardTitle').textContent = dict.mode1CardTitle;
+      document.getElementById('mode1CardDesc').textContent = dict.mode1CardDesc;
+      document.getElementById('mode2CardTitle').textContent = dict.mode2CardTitle;
+      document.getElementById('mode2CardDesc').textContent = dict.mode2CardDesc;
+      document.getElementById('mode3CardTitle').textContent = dict.mode3CardTitle;
+      document.getElementById('mode3CardDesc').textContent = dict.mode3CardDesc;
+      document.getElementById('mode4CardTitle').textContent = dict.mode4CardTitle;
+      document.getElementById('mode4CardDesc').textContent = dict.mode4CardDesc;
+
+      document.getElementById('playLabel1').textContent = dict.playLabel;
+      document.getElementById('playLabel2').textContent = dict.playLabel;
+      document.getElementById('playLabel3').textContent = dict.playLabel;
+      document.getElementById('playLabel4').textContent = dict.viewLabel;
+
+      document.getElementById('infoBannerTitle').textContent = dict.infoBannerTitle;
+      document.getElementById('infoBannerDesc').textContent = dict.infoBannerDesc;
+      document.getElementById('learnMoreBtn').innerHTML = `<i class="fa-solid fa-circle-info"></i> ${dict.learnMoreBtn}`;
+
+      document.getElementById('backBtn1').textContent = dict.backBtn;
+      document.getElementById('backBtn2').textContent = dict.backBtn;
+      document.getElementById('backBtn3').textContent = dict.backBtn;
+      document.getElementById('backBtn4').textContent = dict.backBtn;
+
+      document.getElementById('m1CanvasInstruction').textContent = dict.m1CanvasInstruction;
+      document.getElementById('m2HeaderTitle').textContent = dict.m2HeaderTitle;
+      document.getElementById('m2Tag').textContent = dict.m2Tag;
+      document.getElementById('m2Prompt').textContent = dict.m2Prompt;
+      document.getElementById('m3HeaderTitle').textContent = dict.m3HeaderTitle;
+      document.getElementById('m3Tag').textContent = dict.m3Tag;
+      document.getElementById('m3BtnMyth').textContent = dict.m3BtnMyth;
+      document.getElementById('m3BtnFact').textContent = dict.m3BtnFact;
+
+      document.getElementById('certHeaderTitle').textContent = dict.certHeaderTitle;
+      document.getElementById('certPhotoBtn').textContent = dict.certPhotoBtn;
+      document.getElementById('btnLabelPNG').textContent = dict.btnLabelPNG;
+      document.getElementById('btnLabelPrint').textContent = dict.btnLabelPrint;
+
+      document.getElementById('certInputLabel').textContent = dict.certInputLabel;
+      document.getElementById('certBadgeOrg').textContent = dict.certBadgeOrg;
+      document.getElementById('certBadgeTitle').textContent = dict.certBadgeTitle;
+      document.getElementById('certBadgeSub').textContent = dict.certBadgeSub;
+      document.getElementById('certCertifiesThat').textContent = dict.certCertifiesThat;
+      document.getElementById('certBodyDesc').textContent = dict.certBodyDesc;
+      document.getElementById('certRankLabel').textContent = dict.certRankLabel;
+      document.getElementById('certScoreLabel').textContent = dict.certScoreLabel;
+
+      document.getElementById('radModalTitle').innerHTML = `<i class="fa-solid fa-user-nurse"></i> ${dict.radModalTitle}`;
+      document.getElementById('radModalP1').innerHTML = dict.radModalP1;
+      document.getElementById('radModalPoint1Title').innerHTML = `<i class="fa-solid fa-shield"></i> ${dict.radModalPoint1Title}`;
+      document.getElementById('radModalPoint1Desc').textContent = dict.radModalPoint1Desc;
+      document.getElementById('radModalPoint2Title').innerHTML = `<i class="fa-solid fa-heart-pulse"></i> ${dict.radModalPoint2Title}`;
+      document.getElementById('radModalPoint2Desc').textContent = dict.radModalPoint2Desc;
+      document.getElementById('radModalPoint3Title').innerHTML = `<i class="fa-solid fa-calendar-check"></i> ${dict.radModalPoint3Title}`;
+      document.getElementById('radModalPoint3Desc').textContent = dict.radModalPoint3Desc;
+      document.getElementById('radModalClose').textContent = dict.radModalClose;
+      document.getElementById('footerText').textContent = dict.footerText;
+
+      if (!document.getElementById('mode1View').classList.contains('hidden')) renderMode1Case();
+      if (!document.getElementById('mode2View').classList.contains('hidden')) renderMode2Scenario();
+      if (!document.getElementById('mode3View').classList.contains('hidden')) renderMode3Myth();
+      if (!document.getElementById('mode4View').classList.contains('hidden')) renderCertificate();
+    }
+
+    /* MODE 1 CANVAS ENGINE WITH REAL X-RAY IMAGES */
+    let canvas, ctx;
+    let lensPos = { x: 200, y: 180 };
+    let isDraggingLens = false;
+
+    function initScanCanvas() {
+      canvas = document.getElementById('scanCanvas');
+      if (!canvas) return;
+      ctx = canvas.getContext('2d');
+      const container = document.getElementById('canvasContainer');
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      lensPos = { x: canvas.width / 2, y: canvas.height / 2 };
+
+      canvas.onmousedown = (e) => { isDraggingLens = true; updateLensFromEvent(e); };
+      canvas.onmousemove = (e) => { if (isDraggingLens) updateLensFromEvent(e); };
+      window.onmouseup = () => { isDraggingLens = false; };
+
+      canvas.ontouchstart = (e) => { isDraggingLens = true; updateLensFromEvent(e.touches[0]); };
+      canvas.ontouchmove = (e) => { if (isDraggingLens) updateLensFromEvent(e.touches[0]); };
+      window.ontouchend = () => { isDraggingLens = false; };
+
+      drawScanScene();
+    }
+
+    function updateLensFromEvent(e) {
+      const rect = canvas.getBoundingClientRect();
+      lensPos.x = e.clientX - rect.left;
+      lensPos.y = e.clientY - rect.top;
+      sound.playScanHum();
+      drawScanScene();
+    }
+
+    function drawScanScene() {
+      if (!ctx) return;
+      const cData = mode1Cases[gameState.mode1Index];
+      const w = canvas.width;
+      const h = canvas.height;
+      const img = caseImages[cData.type];
+
+      // 1. Base Workspace Background
+      ctx.fillStyle = '#070a12';
+      ctx.fillRect(0, 0, w, h);
+
+      // Grid Overlay
+      ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < w; x += 25) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+      for (let y = 0; y < h; y += 25) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+
+      // Outer dim view (outside lens)
+      if (img && img.complete && img.naturalWidth !== 0) {
+        drawScaledImage(ctx, img, w, h, 0.18, 'brightness(0.25) blur(3px)');
+      } else {
+        drawAnatomyFallback(ctx, cData.type, w, h, false);
+      }
+
+      // 2. Lens X-Ray Overlay Clip Area
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(lensPos.x, lensPos.y, 75, 0, Math.PI * 2);
+      ctx.clip();
+
+      ctx.fillStyle = '#020617';
+      ctx.fillRect(0, 0, w, h);
+
+      // Inner crisp X-Ray image inside lens
+      if (img && img.complete && img.naturalWidth !== 0) {
+        drawScaledImage(ctx, img, w, h, 1.0, 'contrast(1.15) brightness(1.05)');
+      } else {
+        drawAnatomyFallback(ctx, cData.type, w, h, true);
+      }
+      ctx.restore();
+
+      // 3. Glowing Lens Border & Reticle
+      ctx.beginPath();
+      ctx.arc(lensPos.x, lensPos.y, 75, 0, Math.PI * 2);
+      ctx.strokeStyle = '#22d3ee';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#22d3ee';
+      ctx.shadowBlur = 12;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Crosshair reticle
+      ctx.strokeStyle = 'rgba(34, 211, 238, 0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(lensPos.x - 15, lensPos.y); ctx.lineTo(lensPos.x + 15, lensPos.y);
+      ctx.moveTo(lensPos.x, lensPos.y - 15); ctx.lineTo(lensPos.x, lensPos.y + 15);
+      ctx.stroke();
+    }
+
+    function drawScaledImage(ctx, img, canvasW, canvasH, opacity, filterStr) {
+      ctx.save();
+      if (filterStr) ctx.filter = filterStr;
+      ctx.globalAlpha = opacity;
+
+      const maxW = canvasW * 0.92;
+      const maxH = canvasH * 0.92;
+      const scale = Math.min(maxW / img.width, maxH / img.height);
+      const drawW = img.width * scale;
+      const drawH = img.height * scale;
+      const drawX = (canvasW - drawW) / 2;
+      const drawY = (canvasH - drawH) / 2;
+
+      ctx.drawImage(img, drawX, drawY, drawW, drawH);
+      ctx.restore();
+    }
+
+    function drawAnatomyFallback(ctx, type, w, h, isXray) {
+      const cx = w / 2;
+      const cy = h / 2;
+      ctx.fillStyle = isXray ? 'rgba(220, 235, 255, 0.85)' : '#334155';
+      ctx.strokeStyle = isXray ? '#e2e8f0' : '#475569';
+      ctx.lineWidth = isXray ? 3 : 2;
+
+      if (type === 'hand') {
+        ctx.beginPath(); ctx.roundRect(cx - 45, cy - 20, 90, 110, 12); ctx.fill(); ctx.stroke();
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath(); ctx.roundRect(cx - 35 + i * 22, cy - 95, 16, 80, 8); ctx.fill(); ctx.stroke();
+        }
+        if (isXray) {
+          ctx.fillStyle = '#ffffff'; ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 12;
+          ctx.fillRect(cx + 10, cy - 55, 18, 8);
+        }
+      } else if (type === 'chest') {
+        ctx.fillRect(cx - 8, cy - 100, 16, 200);
+        for (let i = -3; i <= 3; i++) {
+          ctx.beginPath(); ctx.ellipse(cx - 45, cy + i * 22, 40, 10, 0, 0, Math.PI * 2); ctx.stroke();
+          ctx.beginPath(); ctx.ellipse(cx + 45, cy + i * 22, 40, 10, 0, 0, Math.PI * 2); ctx.stroke();
+        }
+        if (isXray) {
+          ctx.fillStyle = '#ffffff'; ctx.shadowColor = '#38bdf8'; ctx.shadowBlur = 15;
+          ctx.beginPath(); ctx.arc(cx, cy - 25, 15, 0, Math.PI * 2); ctx.fill();
+        }
+      } else if (type === 'arm') {
+        ctx.fillRect(cx - 22, cy - 100, 16, 200);
+        if (isXray) {
+          ctx.fillRect(cx + 8, cy - 100, 16, 80);
+          ctx.fillRect(cx + 10, cy - 5, 16, 105);
+        } else {
+          ctx.fillRect(cx + 8, cy - 100, 16, 200);
+        }
+      } else if (type === 'knee') {
+        ctx.fillRect(cx - 28, cy - 110, 56, 90);
+        ctx.fillRect(cx - 28, cy + 20, 56, 90);
+        if (isXray) {
+          ctx.fillStyle = '#ffffff'; ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 15;
+          ctx.fillRect(cx - 34, cy - 25, 68, 40);
+        }
+      }
+    }
+
+    /* GAME NAVIGATION & MODES */
+    function switchView(viewName) {
+      sound.playClickSFX();
+      ['menuView', 'mode1View', 'mode2View', 'mode3View', 'mode4View'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(viewName + 'View').classList.remove('hidden');
+    }
+
+    function startMode(modeNumber) {
+      sound.playClickSFX();
+      sound.startBGM();
+      if (modeNumber === 1) {
+        gameState.mode1Index = 0;
+        switchView('mode1');
+        renderMode1Case();
+        setTimeout(initScanCanvas, 100);
+      } else if (modeNumber === 2) {
+        gameState.mode2Index = 0;
+        switchView('mode2');
+        renderMode2Scenario();
+      } else if (modeNumber === 3) {
+        gameState.mode3Index = 0;
+        switchView('mode3');
+        renderMode3Myth();
+      } else if (modeNumber === 4) {
+        switchView('mode4');
+        renderCertificate();
+        // Play Congratulatory Celebration Fanfare & Applause Cheering
+        sound.playCelebrationFanfare();
+      }
+    }
+
+    /* MODE 1 LOGIC */
+    function renderMode1Case() {
+      const c = mode1Cases[gameState.mode1Index];
+      document.getElementById('m1Progress').textContent = `Case ${gameState.mode1Index + 1} of ${mode1Cases.length}`;
+      document.getElementById('m1Title').textContent = c.title[currentLang];
+      document.getElementById('m1Question').textContent = c.question[currentLang];
+      document.getElementById('m1Streak').textContent = 'x' + gameState.streak;
+
+      const grid = document.getElementById('m1OptionsGrid');
+      grid.innerHTML = '';
+      c.options[currentLang].forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'p-3 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold text-left transition transform active:scale-95 flex items-center gap-2';
+        btn.innerHTML = `<span class="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-300 flex items-center justify-center font-bold text-xs shrink-0">${String.fromCharCode(65 + idx)}</span> <span>${opt}</span>`;
+        btn.onclick = () => submitMode1Answer(idx);
+        grid.appendChild(btn);
+      });
+      if (ctx) drawScanScene();
+    }
+
+    function submitMode1Answer(selectedIdx) {
+      const c = mode1Cases[gameState.mode1Index];
+      if (selectedIdx === c.correctIndex) {
+        sound.playCorrectSFX(gameState.streak);
+        gameState.score += 150 * gameState.streak;
+        gameState.streak++;
+        showModal(true, currentLang === 'en' ? "Diagnostic Accuracy!" : "Diagnostik Tepat!", c.explanation[currentLang], () => {
+          gameState.mode1Index++;
+          if (gameState.mode1Index < mode1Cases.length) renderMode1Case();
+          else showModal(true, "Scanner Master!", currentLang === 'en' ? "You completed all scanner cases!" : "Anda telah menyelesaikan semua imbasan!", () => switchView('menu'));
+        });
+      } else {
+        sound.playWrongSFX();
+        gameState.streak = 1;
+        showModal(false, currentLang === 'en' ? "Incorrect Finding" : "Penemuan Kurang Tepat", currentLang === 'en' ? "Look closer with the scanning lens to find high-density radio-opaque objects or fractures!" : "Lihat lebih dekat dengan kanta imbasan!", null);
+      }
+      updateScore();
+    }
+
+    /* MODE 2 LOGIC WITH VISUAL MACHINE PHOTO CARDS */
+    function renderMode2Scenario() {
+      const s = mode2Scenarios[gameState.mode2Index];
+      document.getElementById('m2Progress').textContent = `Scenario ${gameState.mode2Index + 1} of ${mode2Scenarios.length}`;
+      document.getElementById('m2ScenarioTitle').textContent = s.title[currentLang];
+      document.getElementById('m2ScenarioDesc').textContent = s.desc[currentLang];
+      document.getElementById('m2ScenarioIcon').innerHTML = `<i class="fa-solid ${s.icon}"></i>`;
+
+      const grid = document.getElementById('m2ModalityGrid');
+      grid.innerHTML = '';
+      modalitiesList.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'group p-2.5 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-blue-400 cursor-pointer transition transform hover:-translate-y-1 active:scale-95 flex flex-col items-center justify-between shadow-lg';
+        card.innerHTML = `
+          <div class="w-full h-24 sm:h-28 rounded-xl overflow-hidden mb-2 relative bg-slate-900 border border-slate-700/50">
+            <img src="${m.image}" alt="${m.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
+            <div class="absolute bottom-1.5 left-2 flex items-center gap-1.5 text-cyan-300 text-xs font-bold">
+              <i class="fa-solid ${m.icon}"></i>
+            </div>
+          </div>
+          <span class="font-tech font-bold text-xs sm:text-sm text-slate-200 group-hover:text-blue-300 transition-colors mb-1">${m.label[currentLang]}</span>
+        `;
+        card.onclick = () => submitMode2Answer(m.name);
+        grid.appendChild(card);
+      });
+    }
+
+    function submitMode2Answer(selectedName) {
+      const s = mode2Scenarios[gameState.mode2Index];
+      if (selectedName === s.correct) {
+        sound.playCorrectSFX(2);
+        gameState.score += 200;
+        showModal(true, currentLang === 'en' ? "Perfect Modality Match!" : "Padanan Mesin Tepat!", s.explanation[currentLang], () => {
+          gameState.mode2Index++;
+          if (gameState.mode2Index < mode2Scenarios.length) renderMode2Scenario();
+          else showModal(true, "Machine Master!", currentLang === 'en' ? "You know every radiology machine!" : "Anda menguasai semua jenis mesin radiologi!", () => switchView('menu'));
+        });
+      } else {
+        sound.playWrongSFX();
+        showModal(false, currentLang === 'en' ? "Try Again" : "Cuba Lagi", currentLang === 'en' ? "Consider which machine is safest and best suited for this case." : "Fikirkan mesin mana yang paling selamat untuk pesakit ini.", null);
+      }
+      updateScore();
+    }
+
+    /* MODE 3 LOGIC */
+    function renderMode3Myth() {
+      const m = mode3Myths[gameState.mode3Index];
+      document.getElementById('m3Progress').textContent = `Myth ${gameState.mode3Index + 1} of ${mode3Myths.length}`;
+      document.getElementById('m3Statement').textContent = `"${m.statement[currentLang]}"`;
+    }
+
+    function submitMythChoice(userChoice) {
+      const m = mode3Myths[gameState.mode3Index];
+      if (userChoice === m.isTrue) {
+        sound.playCorrectSFX(1);
+        gameState.score += 100;
+        showModal(true, currentLang === 'en' ? "Myth Busted / Confirmed!" : "Fakta Sah!", m.explanation[currentLang], () => {
+          gameState.mode3Index++;
+          if (gameState.mode3Index < mode3Myths.length) renderMode3Myth();
+          else showModal(true, "MythBuster Champion!", currentLang === 'en' ? "You cleared all radiology myths!" : "Anda berjaya membongkar semua mitos radiologi!", () => switchView('menu'));
+        });
+      } else {
+        sound.playWrongSFX();
+        showModal(false, currentLang === 'en' ? "Incorrect Check" : "Kurang Tepat", m.explanation[currentLang], null);
+      }
+      updateScore();
+    }
+
+    /* MODE 4 CERTIFICATE & DISTRIBUTION LOGIC */
+    function getRankTitle() {
+      if (gameState.score > 800) return currentLang === 'en' ? "Master Diagnostic Radiographer" : "Pakar Ahli Radiografi Diagnostik";
+      if (gameState.score > 300) return currentLang === 'en' ? "Certified Junior Diagnostic Radiographer" : "Ahli Radiografi Diagnostik Muda Bertauliah";
+      return currentLang === 'en' ? "Trainee Scanner" : "Ahli Radiografi Diagnostik Pelatih";
+    }
+
+    function renderCertificate() {
+      document.getElementById('certScoreDisplay').textContent = gameState.score + " PTS";
+      document.getElementById('certNameDisplay').textContent = gameState.playerName;
+      document.getElementById('certRankDisplay').textContent = getRankTitle();
+    }
+
+    function updateCertName() {
+      gameState.playerName = document.getElementById('playerNameInput').value || "Future Diagnostic Radiographer";
+      document.getElementById('certNameDisplay').textContent = gameState.playerName;
+    }
+
+    /* BADGE METHOD 1: DOWNLOAD AS HIGH-RES PNG IMAGE */
+    function downloadBadgePNG() {
+      sound.playClickSFX();
+      const certElement = document.getElementById('certificateCard');
+      
+      html2canvas(certElement, {
+        backgroundColor: '#070a12',
+        scale: 2
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `Junior_Radiographer_Badge_${gameState.playerName.replace(/\s+/g, '_')}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+
+    /* BADGE METHOD 2: CAMERA PHOTO MODE TOGGLE */
+    function toggleCameraMode() {
+      sound.playClickSFX();
+      gameState.cameraMode = !gameState.cameraMode;
+      const header = document.getElementById('mainHeader');
+      const footer = document.getElementById('mainFooter');
+      const inputBox = document.getElementById('certInputBox');
+      const toolbar = document.getElementById('certActionToolbar');
+
+      if (gameState.cameraMode) {
+        header.classList.add('hidden');
+        footer.classList.add('hidden');
+        inputBox.classList.add('hidden');
+        toolbar.classList.add('hidden');
+        document.getElementById('certPhotoBtn').textContent = "Exit Photo Mode";
+      } else {
+        header.classList.remove('hidden');
+        footer.classList.remove('hidden');
+        inputBox.classList.remove('hidden');
+        toolbar.classList.remove('hidden');
+        document.getElementById('certPhotoBtn').textContent = translations[currentLang].certPhotoBtn;
+      }
+    }
+
+    function updateScore() {
+      document.getElementById('totalScoreDisplay').textContent = gameState.score;
+    }
+
+    /* MODAL HELPERS */
+    function showModal(isSuccess, title, bodyText, nextCallback) {
+      const modal = document.getElementById('explanationModal');
+      const iconContainer = document.getElementById('modalIconContainer');
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalBody').textContent = bodyText;
+
+      if (isSuccess) {
+        iconContainer.className = 'w-16 h-16 mx-auto rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 text-3xl';
+        iconContainer.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+      } else {
+        iconContainer.className = 'w-16 h-16 mx-auto rounded-full bg-rose-500/20 border border-rose-400/40 flex items-center justify-center text-rose-300 text-3xl';
+        iconContainer.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+      }
+
+      const nextBtn = document.getElementById('modalNextBtn');
+      nextBtn.onclick = () => {
+        sound.playClickSFX();
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        if (nextCallback) nextCallback();
+      };
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function openRadiographerModal() {
+      sound.playClickSFX();
+      document.getElementById('radiographerModal').classList.remove('opacity-0', 'pointer-events-none');
+    }
+    function closeRadiographerModal() {
+      sound.playClickSFX();
+      document.getElementById('radiographerModal').classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    /* BACKGROUND PARTICLES */
+    function initBgParticles() {
+      const pCanvas = document.getElementById('bgParticleCanvas');
+      if (!pCanvas) return;
+      const pCtx = pCanvas.getContext('2d');
+      let particles = [];
+
+      function resize() { pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight; }
+      window.addEventListener('resize', resize);
+      resize();
+
+      for (let i = 0; i < 35; i++) {
+        particles.push({
+          x: Math.random() * pCanvas.width,
+          y: Math.random() * pCanvas.height,
+          radius: Math.random() * 2 + 1,
+          vx: (Math.random() - 0.5) * 0.4,
+          vy: (Math.random() - 0.5) * 0.4
+        });
+      }
+
+      function loop() {
+        pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+        pCtx.fillStyle = '#06b6d4';
+        particles.forEach(p => {
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < 0) p.x = pCanvas.width;
+          if (p.x > pCanvas.width) p.x = 0;
+          if (p.y < 0) p.y = pCanvas.height;
+          if (p.y > pCanvas.height) p.y = 0;
+          pCtx.beginPath(); pCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); pCtx.fill();
+        });
+        requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
+    window.onload = function() {
+      preloadGameImages();
+      initBgParticles();
+      updateScore();
+      setLanguage('en');
+
+      document.addEventListener('click', () => {
+        sound.init();
+      }, { once: true });
+    };
+  </script>
+</body>
+</html>
